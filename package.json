@@ -5,7 +5,7 @@
     "url": "https://github.com/canalcircle/cordova-plugin-firebase"
   },
   "name": "@canalcircle/cordova-plugin-firebasex",
-  "version": "3.0.10",
+  "version": "3.0.11",
   "description": "Cordova plugin for Google Firebase",
   "cordova": {
     "id": "cordova-plugin-firebase",
