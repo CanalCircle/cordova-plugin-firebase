@@ -1,14 +1,11 @@
 {
-  "author": {
-    "name": "Robert Arnesson"
-  },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dpa99c/cordova-plugin-firebase"
+    "url": "https://github.com/canalcircle/cordova-plugin-firebase"
   },
-  "name": "cordova-plugin-firebasex",
-  "version": "3.0.8",
+  "name": "@canalcircle/cordova-plugin-firebasex",
+  "version": "3.0.9",
   "description": "Cordova plugin for Google Firebase",
   "cordova": {
     "id": "cordova-plugin-firebase",
@@ -47,6 +44,6 @@
   },
   "dependencies": {
     "xcode": "^2.0.0",
-    "cordova-lib":"^9.0.0"
+    "cordova-lib": "^9.0.0"
   }
 }
