@@ -2,6 +2,7 @@ var fs = require("fs");
 var path = require("path");
 var utilities = require("../lib/utilities");
 var xcode = require("xcode");
+var plist = require('plist');
 
 /**
  * This is used as the display text for the build phase block in XCode as well as the
@@ -13,15 +14,11 @@ module.exports = {
 
     /**
      * Used to get the path to the XCode project's .pbxproj file.
-     *
-     * @param {object} context - The Cordova context.
-     * @returns The path to the XCode project's .pbxproj file.
      */
-    getXcodeProjectPath: function (context) {
-
-        var appName = utilities.getAppName(context);
-
-        return path.join("platforms", "ios", appName + ".xcodeproj", "project.pbxproj");
+    getXcodeProjectPath: function (cb) {
+        utilities.getAppName(function(appName){
+            cb(path.join("platforms", "ios", appName + ".xcodeproj", "project.pbxproj"));
+        });
     },
 
     /**
@@ -170,5 +167,43 @@ module.exports = {
 
         // Finally, write the .pbxproj back out to disk.
         fs.writeFileSync(xcodeProjectPath, xcodeProject.writeSync());
+    },
+    stripDebugSymbols: function(){
+        var podFilePath = 'platforms/ios/Podfile',
+            podFile = fs.readFileSync(podFilePath).toString();
+        if(!podFile.match('DEBUG_INFORMATION_FORMAT')){
+            podFile += "\npost_install do |installer|\n" +
+                "    installer.pods_project.targets.each do |target|\n" +
+                "        target.build_configurations.each do |config|\n" +
+                "            config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf'\n" +
+                "        end\n" +
+                "    end\n" +
+                "end";
+            fs.writeFileSync(podFilePath, podFile);
+            console.log('cordova-plugin-firebasex: Applied IOS_STRIP_DEBUG to Podfile');
+        }
+    },
+    applyPluginVarsToPlists: function(googlePlistPath, appPlistPath, pluginVariables){
+        var googlePlist = plist.parse(fs.readFileSync(googlePlistPath, 'utf8')),
+            appPlist = plist.parse(fs.readFileSync(appPlistPath, 'utf8')),
+            googlePlistModified = false,
+            appPlistModified = false;
+
+        if(typeof pluginVariables['FIREBASE_ANALYTICS_COLLECTION_ENABLED'] !== 'undefined'){
+            googlePlist["FIREBASE_ANALYTICS_COLLECTION_ENABLED"] = (pluginVariables['FIREBASE_ANALYTICS_COLLECTION_ENABLED'] !== "false" ? "true" : "false") ;
+            appPlist["FirebaseScreenReportingEnabled"] = (pluginVariables['FIREBASE_ANALYTICS_COLLECTION_ENABLED'] !== "false");
+            appPlistModified = googlePlistModified = true;
+        }
+        if(typeof pluginVariables['FIREBASE_PERFORMANCE_COLLECTION_ENABLED'] !== 'undefined'){
+            googlePlist["FIREBASE_PERFORMANCE_COLLECTION_ENABLED"] = (pluginVariables['FIREBASE_PERFORMANCE_COLLECTION_ENABLED'] !== "false" ? "true" : "false") ;
+            googlePlistModified = true;
+        }
+        if(typeof pluginVariables['FIREBASE_CRASHLYTICS_COLLECTION_ENABLED'] !== 'undefined'){
+            googlePlist["FIREBASE_CRASHLYTICS_COLLECTION_ENABLED"] = (pluginVariables['FIREBASE_CRASHLYTICS_COLLECTION_ENABLED'] !== "false" ? "true" : "false") ;
+            googlePlistModified = true;
+        }
+
+        if(googlePlistModified) fs.writeFileSync(googlePlistPath, plist.build(googlePlist));
+        if(appPlistModified) fs.writeFileSync(appPlistPath, plist.build(appPlist));
     }
 };

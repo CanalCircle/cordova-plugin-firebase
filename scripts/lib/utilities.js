@@ -3,6 +3,7 @@
  */
 var fs = require('fs');
 var path = require("path");
+var xml2js = require('xml2js').parseString;
 
 fs.ensureDirSync = function (dir) {
   if (!fs.existsSync(dir)) {
@@ -19,14 +20,13 @@ fs.ensureDirSync = function (dir) {
 module.exports = {
   /**
      * Used to get the name of the application as defined in the config.xml.
-     *
-     * @param {object} context - The Cordova context.
-     * @returns {string} The value of the name element in config.xml.
      */
-  getAppName: function (context) {
-    var ConfigParser = require("cordova-lib").configparser;
-    var config = new ConfigParser("config.xml");
-    return config.name();
+  getAppName: function(cb){
+      var xml = fs.readFileSync("config.xml", 'utf-8');
+      xml2js(xml, function(err, result){
+          var widgetName = typeof(result.widget.name[0]) === 'object' ? result.widget.name[0]._ : result.widget.name[0];
+          cb(widgetName);
+      });
   },
 
   /**
@@ -44,11 +44,10 @@ module.exports = {
           var contents = fs.readFileSync(file).toString();
 
           try {
-            platform.dest.forEach(function (destinationPath) {
+              var destinationPath = platform.dest;
               var folder = destinationPath.substring(0, destinationPath.lastIndexOf('/'));
               fs.ensureDirSync(folder);
               fs.writeFileSync(destinationPath, contents);
-            });
           } catch (e) {
             // skip
           }
