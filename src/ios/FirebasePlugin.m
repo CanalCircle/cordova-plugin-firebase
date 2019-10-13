@@ -4,7 +4,7 @@
 #import "Firebase.h"
 #import <Fabric/Fabric.h>
 #import <Crashlytics/Crashlytics.h>
-@import FirebaseInstanceID;
+// @import FirebaseInstanceID;
 @import FirebaseMessaging;
 @import FirebaseAnalytics;
 @import FirebaseRemoteConfig;
